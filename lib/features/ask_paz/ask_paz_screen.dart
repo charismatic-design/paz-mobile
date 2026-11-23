@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/paz_theme.dart';
@@ -19,7 +20,8 @@ class ChatMessage {
 }
 
 class AskPazScreen extends StatefulWidget {
-  const AskPazScreen({super.key});
+  final List<ChatMessage>? initialMessages;
+  const AskPazScreen({super.key, this.initialMessages});
 
   @override
   State<AskPazScreen> createState() => _AskPazScreenState();
@@ -40,11 +42,64 @@ class _AskPazScreenState extends State<AskPazScreen> {
     'Explain the floating exchange rate reform',
   ];
 
+  static final Set<String> _staticStarterPrompts = {
+    'best bank for 1000 today',
+    'estimate my portfolio value',
+    'compare nbe tbills vs physical gold',
+    'compare nbe t bills vs physical gold',
+    'physical gold 24k price per gram',
+    'explain the floating exchange rate reform',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialMessages != null) {
+      _messages.addAll(widget.initialMessages!);
+    }
+  }
+
   @override
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  static String _normalizePrompt(String s) {
+    return s
+        .toLowerCase()
+        .replaceAll(r'$', '')
+        .replaceAll(r'\$', '')
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  List<String> _filterDynamicSuggestions(List<String> incoming, String userPrompt) {
+    final normUser = _normalizePrompt(userPrompt);
+    final List<String> result = [];
+    final seen = <String>{};
+
+    for (final s in incoming) {
+      final trimmed = s.trim();
+      if (trimmed.isEmpty) continue;
+
+      final norm = _normalizePrompt(trimmed);
+      if (norm.isEmpty) continue;
+
+      // Filter out if matches any static starter prompt
+      if (_staticStarterPrompts.contains(norm)) continue;
+
+      // Filter out if duplicates the user's last prompt
+      if (norm == normUser) continue;
+
+      // Filter out duplicates within the suggestions list
+      if (!seen.add(norm)) continue;
+
+      result.add(trimmed);
+    }
+    return result;
   }
 
   void _scrollToBottom() {
@@ -81,13 +136,14 @@ class _AskPazScreenState extends State<AskPazScreen> {
       final res = await _apiService.sendAiChat(text);
       final reply = res['reply'] as String? ?? 'No response received from PAZ.';
       final rawSuggestions = res['suggestions'] as List? ?? [];
-      final suggestions = rawSuggestions.map((e) => e.toString()).toList();
+      final incoming = rawSuggestions.map((e) => e.toString()).toList();
+      final dynamicSuggestions = _filterDynamicSuggestions(incoming, text);
 
       final agentMsg = ChatMessage(
         text: reply,
         isUser: false,
         timestamp: DateTime.now(),
-        suggestions: suggestions,
+        suggestions: dynamicSuggestions,
       );
 
       if (mounted) {
@@ -103,6 +159,7 @@ class _AskPazScreenState extends State<AskPazScreen> {
           text: 'Error contacting PAZ agent: $e\nPlease verify network connection.',
           isUser: false,
           timestamp: DateTime.now(),
+          suggestions: const [],
         );
         setState(() {
           _messages.add(errorMsg);
@@ -325,12 +382,103 @@ class _AskPazScreenState extends State<AskPazScreen> {
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final msg = _messages[index];
-        return _buildMessageBubble(msg);
+        final isLatest = (index == _messages.length - 1);
+        return _buildMessageBubble(msg, isLatest: isLatest);
       },
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage msg) {
+  MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext context) {
+    return MarkdownStyleSheet(
+      p: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        color: PazColors.textPrimary,
+        height: 1.45,
+      ),
+      h1: GoogleFonts.plusJakartaSans(
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.3,
+        color: PazColors.textPrimary,
+      ),
+      h2: GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.2,
+        color: PazColors.textPrimary,
+      ),
+      h3: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.1,
+        color: PazColors.textPrimary,
+      ),
+      h4: GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: PazColors.textSecondary,
+      ),
+      strong: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: PazColors.textPrimary,
+      ),
+      em: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontStyle: FontStyle.italic,
+        color: PazColors.textSecondary,
+      ),
+      listBullet: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: PazColors.emerald,
+      ),
+      listBulletPadding: const EdgeInsets.only(right: 6),
+      code: GoogleFonts.jetBrainsMono(
+        fontSize: 12,
+        color: PazColors.emerald,
+        backgroundColor: PazColors.canvas,
+      ),
+      codeblockPadding: const EdgeInsets.all(10),
+      codeblockDecoration: BoxDecoration(
+        color: PazColors.canvas,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: PazColors.cardBorder),
+      ),
+      blockquote: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontStyle: FontStyle.italic,
+        color: PazColors.textSecondary,
+      ),
+      blockquoteDecoration: const BoxDecoration(
+        border: Border(left: BorderSide(color: PazColors.emerald, width: 3)),
+      ),
+      horizontalRuleDecoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: PazColors.cardBorderStrong, width: 1)),
+      ),
+      a: GoogleFonts.plusJakartaSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: PazColors.emerald,
+        decoration: TextDecoration.underline,
+      ),
+      tableHead: GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: PazColors.textPrimary,
+      ),
+      tableBody: GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        color: PazColors.textSecondary,
+      ),
+      tableBorder: TableBorder.all(color: PazColors.cardBorder, width: 1),
+      blockSpacing: 8,
+      listIndent: 16,
+    );
+  }
+
+  Widget _buildMessageBubble(ChatMessage msg, {bool isLatest = false}) {
     if (msg.isUser) {
       return Align(
         alignment: Alignment.centerRight,
@@ -388,7 +536,7 @@ class _AskPazScreenState extends State<AskPazScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -412,18 +560,14 @@ class _AskPazScreenState extends State<AskPazScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      SelectableText(
-                        msg.text,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: PazColors.textPrimary,
-                          height: 1.45,
-                        ),
+                      MarkdownBody(
+                        data: msg.text.trim(),
+                        selectable: true,
+                        styleSheet: _buildMarkdownStyleSheet(context),
                       ),
-                      if (msg.suggestions.isNotEmpty) ...[
+                      if (isLatest && !msg.isUser && msg.suggestions.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        const Divider(height: 12),
+                        const Divider(height: 12, color: PazColors.cardBorder),
                         const SizedBox(height: 4),
                         Text(
                           'FOLLOW-UP SUGGESTIONS',
