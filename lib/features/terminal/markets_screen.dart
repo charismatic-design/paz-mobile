@@ -165,30 +165,34 @@ class _MarketsScreenState extends State<MarketsScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'PAZ TERMINAL',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: PazColors.textPrimary,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'PAZ TERMINAL',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: PazColors.textPrimary,
+                    ),
                   ),
-                ),
-                Text(
-                  'ETHIOPIAN MACRO-FINANCIAL INTELLIGENCE',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                    color: PazColors.textDim,
+                  Text(
+                    'ETHIOPIAN MACRO-FINANCIAL INTELLIGENCE',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                      color: PazColors.textDim,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const Spacer(),
             IconButton(
               onPressed: _isLoading ? null : _fetchMarketData,
               icon: _isLoading

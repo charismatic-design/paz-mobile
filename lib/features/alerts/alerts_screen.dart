@@ -209,30 +209,34 @@ class _AlertsScreenState extends State<AlertsScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'RATE ALERT ENGINE',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: PazColors.textPrimary,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'RATE ALERT ENGINE',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: PazColors.textPrimary,
+                    ),
                   ),
-                ),
-                Text(
-                  'AUTOMATED HIGH-FREQUENCY PRICE TRIGGERS',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                    color: PazColors.textDim,
+                  Text(
+                    'AUTOMATED HIGH-FREQUENCY PRICE TRIGGERS',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                      color: PazColors.textDim,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const Spacer(),
             if (!_isGuest)
               IconButton(
                 onPressed: _showAddAlertSheet,

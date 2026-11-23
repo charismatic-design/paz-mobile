@@ -161,30 +161,34 @@ class _AskPazScreenState extends State<AskPazScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'ASK PAZ',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                  color: PazColors.textPrimary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'ASK PAZ',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: PazColors.textPrimary,
+                  ),
                 ),
-              ),
-              Text(
-                'ETHIOPIAN MACRO-FINANCIAL INTELLIGENCE AGENT',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
-                  color: PazColors.textDim,
+                Text(
+                  'ETHIOPIAN MACRO-FINANCIAL INTELLIGENCE AGENT',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
+                    color: PazColors.textDim,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           if (_messages.isNotEmpty)
             IconButton(
               icon: const Icon(LucideIcons.rotateCcw, size: 16, color: PazColors.textDim),
@@ -227,13 +231,17 @@ class _AskPazScreenState extends State<AskPazScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'PAZ FINANCIAL AGENT READY',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                        color: PazColors.emerald,
+                    Expanded(
+                      child: Text(
+                        'PAZ FINANCIAL AGENT READY',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: PazColors.emerald,
+                        ),
                       ),
                     ),
                   ],
@@ -289,12 +297,14 @@ class _AskPazScreenState extends State<AskPazScreen> {
                     children: [
                       const Icon(LucideIcons.arrowUpRight, size: 12, color: PazColors.emerald),
                       const SizedBox(width: 6),
-                      Text(
-                        suggestion,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: PazColors.textSecondary,
+                      Flexible(
+                        child: Text(
+                          suggestion,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: PazColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -362,84 +372,101 @@ class _AskPazScreenState extends State<AskPazScreen> {
           decoration: BoxDecoration(
             color: PazColors.card,
             borderRadius: BorderRadius.circular(10),
-            border: const Border(
-              left: BorderSide(color: PazColors.emerald, width: 3),
-              top: BorderSide(color: PazColors.cardBorder),
-              right: BorderSide(color: PazColors.cardBorder),
-              bottom: BorderSide(color: PazColors.cardBorder),
-            ),
+            border: Border.all(color: PazColors.cardBorder),
           ),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(LucideIcons.terminal, size: 12, color: PazColors.emerald),
-                  const SizedBox(width: 6),
-                  Text(
-                    'PAZ INTELLIGENCE',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                      color: PazColors.emerald,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              SelectableText(
-                msg.text,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: PazColors.textPrimary,
-                  height: 1.45,
-                ),
-              ),
-              if (msg.suggestions.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                const Divider(height: 12),
-                const SizedBox(height: 4),
-                Text(
-                  'FOLLOW-UP SUGGESTIONS',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                    color: PazColors.textDim,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 3.5,
+                  child: Container(
+                    color: PazColors.emerald,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: msg.suggestions.map((suggestion) {
-                    return InkWell(
-                      onTap: () => _sendMessage(suggestion),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: PazColors.canvas,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: PazColors.cardBorderStrong),
-                        ),
-                        child: Text(
-                          suggestion,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: PazColors.emerald,
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(LucideIcons.terminal, size: 12, color: PazColors.emerald),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'PAZ INTELLIGENCE',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                                color: PazColors.emerald,
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        msg.text,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: PazColors.textPrimary,
+                          height: 1.45,
                         ),
                       ),
-                    );
-                  }).toList(),
+                      if (msg.suggestions.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        const Divider(height: 12),
+                        const SizedBox(height: 4),
+                        Text(
+                          'FOLLOW-UP SUGGESTIONS',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: PazColors.textDim,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: msg.suggestions.map((suggestion) {
+                            return InkWell(
+                              onTap: () => _sendMessage(suggestion),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: PazColors.canvas,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: PazColors.cardBorderStrong),
+                                ),
+                                child: Text(
+                                  suggestion,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: PazColors.emerald,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ],
-            ],
+            ),
           ),
         ),
       );
@@ -460,12 +487,16 @@ class _AskPazScreenState extends State<AskPazScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            'PAZ is analyzing market data...',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontStyle: FontStyle.italic,
-              color: PazColors.textDim,
+          Expanded(
+            child: Text(
+              'PAZ is analyzing market data...',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: PazColors.textDim,
+              ),
             ),
           ),
         ],
