@@ -3,9 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../core/theme/paz_theme.dart';
 import 'account/account_screen.dart';
-import 'alerts/alerts_screen.dart';
 import 'ask_paz/ask_paz_screen.dart';
+import 'portfolio/portfolio_screen.dart';
 import 'terminal/markets_screen.dart';
+import 'tools/tools_screen.dart';
 
 class MainShell extends StatefulWidget {
   final bool isGuest;
@@ -26,7 +27,8 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _screens = const [
     MarketsScreen(),
-    AlertsScreen(),
+    ToolsScreen(),
+    PortfolioScreen(),
     AskPazScreen(),
     AccountScreen(),
   ];
@@ -59,8 +61,8 @@ class _MainShellState extends State<MainShell> {
           selectedItemColor: PazColors.emerald,
           unselectedItemColor: PazColors.textDim,
           type: BottomNavigationBarType.fixed,
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
+          selectedFontSize: 10,
+          unselectedFontSize: 10,
           selectedLabelStyle: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w700,
             letterSpacing: 0.3,
@@ -83,13 +85,24 @@ class _MainShellState extends State<MainShell> {
             BottomNavigationBarItem(
               icon: Padding(
                 padding: EdgeInsets.only(bottom: 4),
-                child: Icon(LucideIcons.bell, size: 20),
+                child: Icon(LucideIcons.compass, size: 20),
               ),
               activeIcon: Padding(
                 padding: EdgeInsets.only(bottom: 4),
-                child: Icon(LucideIcons.bell, size: 20, color: PazColors.emerald),
+                child: Icon(LucideIcons.compass, size: 20, color: PazColors.emerald),
               ),
-              label: 'Alerts',
+              label: 'Tools',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Icon(LucideIcons.wallet, size: 20),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4),
+                child: Icon(LucideIcons.wallet, size: 20, color: PazColors.emerald),
+              ),
+              label: 'Portfolio',
             ),
             BottomNavigationBarItem(
               icon: Padding(

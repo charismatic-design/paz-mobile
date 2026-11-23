@@ -153,8 +153,33 @@ class ApiService {
       }
       rethrow;
     } on SocketException {
-      // In offline scenario, return cached user if present
+      // Offline fallback: return cached user if present
       return await _storage.getUser();
+    }
+  }
+
+  Future<Map<String, dynamic>> updatePreferences({
+    String? preferredCurrency,
+    String? preferredBank,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (preferredCurrency != null) body['preferred_currency'] = preferredCurrency;
+      if (preferredBank != null) body['preferred_bank'] = preferredBank;
+
+      final res = await http.post(
+        Uri.parse(ApiConfig.preferences),
+        headers: await _headers(requiresAuth: true),
+        body: jsonEncode(body),
+      );
+      final data = _processResponse(res) as Map<String, dynamic>;
+      final user = data['user'] as Map<String, dynamic>?;
+      if (user != null) {
+        await _storage.saveUser(user);
+      }
+      return data;
+    } on SocketException {
+      throw ApiException('Network error updating preferences');
     }
   }
 
@@ -185,6 +210,33 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getFxBanks() async {
+    try {
+      final res = await http.get(
+        Uri.parse(ApiConfig.fxBanks),
+        headers: await _headers(requiresAuth: false),
+      );
+      return _processResponse(res) as Map<String, dynamic>;
+    } on SocketException {
+      throw ApiException('Network error fetching commercial banks FX rates');
+    }
+  }
+
+  Future<Map<String, dynamic>> getRemittance({
+    required double amount,
+    required String currency,
+  }) async {
+    try {
+      final res = await http.get(
+        Uri.parse(ApiConfig.remittance(amount: amount, currency: currency)),
+        headers: await _headers(requiresAuth: false),
+      );
+      return _processResponse(res) as Map<String, dynamic>;
+    } on SocketException {
+      throw ApiException('Network error fetching diaspora remittance corridors');
+    }
+  }
+
   Future<Map<String, dynamic>> getGoldLive() async {
     try {
       final res = await http.get(
@@ -206,6 +258,67 @@ class ApiService {
       return _processResponse(res) as Map<String, dynamic>;
     } on SocketException {
       throw ApiException('Network error fetching macro indicators');
+    }
+  }
+
+  Future<Map<String, dynamic>> getMacroNews() async {
+    try {
+      final res = await http.get(
+        Uri.parse(ApiConfig.macroNews),
+        headers: await _headers(requiresAuth: false),
+      );
+      return _processResponse(res) as Map<String, dynamic>;
+    } on SocketException {
+      throw ApiException('Network error fetching Ethiopian financial news');
+    }
+  }
+
+  // ==================== PORTFOLIO & BANK ACCOUNTS ====================
+
+  Future<Map<String, dynamic>> getBankSummary() async {
+    try {
+      final res = await http.get(
+        Uri.parse(ApiConfig.bankSummary),
+        headers: await _headers(requiresAuth: true),
+      );
+      return _processResponse(res) as Map<String, dynamic>;
+    } on SocketException {
+      throw ApiException('Network error fetching portfolio summary');
+    }
+  }
+
+  Future<Map<String, dynamic>> addBankAccount({
+    required String bankName,
+    required String accountNumber,
+    required double balance,
+    String currency = 'ETB',
+  }) async {
+    try {
+      final res = await http.post(
+        Uri.parse(ApiConfig.bankAccounts),
+        headers: await _headers(requiresAuth: true),
+        body: jsonEncode({
+          'bank_name': bankName.trim(),
+          'account_number': accountNumber.trim(),
+          'balance': balance,
+          'currency': currency.trim().toUpperCase(),
+        }),
+      );
+      return _processResponse(res) as Map<String, dynamic>;
+    } on SocketException {
+      throw ApiException('Network error adding bank account');
+    }
+  }
+
+  Future<void> deleteBankAccount(dynamic id) async {
+    try {
+      final res = await http.delete(
+        Uri.parse(ApiConfig.deleteBankAccount(id)),
+        headers: await _headers(requiresAuth: true),
+      );
+      _processResponse(res);
+    } on SocketException {
+      throw ApiException('Network error deleting bank account');
     }
   }
 
@@ -246,7 +359,7 @@ class ApiService {
     }
   }
 
-  Future<void> deleteAlert(int id) async {
+  Future<void> deleteAlert(dynamic id) async {
     try {
       final res = await http.delete(
         Uri.parse(ApiConfig.deleteAlert(id)),

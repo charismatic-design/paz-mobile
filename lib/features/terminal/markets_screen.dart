@@ -15,14 +15,23 @@ class MarketsScreen extends StatefulWidget {
 class _MarketsScreenState extends State<MarketsScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _calcController = TextEditingController(text: '10000');
+  final TextEditingController _goldGramsController = TextEditingController(text: '10');
   final NumberFormat _currencyFormat = NumberFormat('#,##0.00');
+
+  int _selectedSubTab = 0; // 0: Overview, 1: Bank FX, 2: Gold 24K, 3: Macro & News
+  String _selectedBankCurrency = 'USD';
 
   bool _isLoading = true;
   String? _errorMessage;
 
   Map<String, dynamic>? _fxData;
+  Map<String, dynamic>? _bankData;
   Map<String, dynamic>? _goldData;
   Map<String, dynamic>? _macroData;
+  Map<String, dynamic>? _newsData;
+
+  final List<String> _subTabs = ['Overview', 'Bank FX', 'Gold 24K', 'Macro & News'];
+  final List<String> _bankCurrencies = ['USD', 'EUR', 'GBP', 'AED'];
 
   @override
   void initState() {
@@ -33,6 +42,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   @override
   void dispose() {
     _calcController.dispose();
+    _goldGramsController.dispose();
     super.dispose();
   }
 
@@ -45,17 +55,21 @@ class _MarketsScreenState extends State<MarketsScreen> {
     try {
       final results = await Future.wait([
         _apiService.getFxRates().catchError((e) => <String, dynamic>{}),
+        _apiService.getFxBanks().catchError((e) => <String, dynamic>{}),
         _apiService.getGoldLive().catchError((e) => <String, dynamic>{}),
         _apiService.getMacroIndicators().catchError((e) => <String, dynamic>{}),
+        _apiService.getMacroNews().catchError((e) => <String, dynamic>{}),
       ]);
 
       if (mounted) {
         setState(() {
           _fxData = results[0].isNotEmpty ? results[0] : null;
-          _goldData = results[1].isNotEmpty ? results[1] : null;
-          _macroData = results[2].isNotEmpty ? results[2] : null;
+          _bankData = results[1].isNotEmpty ? results[1] : null;
+          _goldData = results[2].isNotEmpty ? results[2] : null;
+          _macroData = results[3].isNotEmpty ? results[3] : null;
+          _newsData = results[4].isNotEmpty ? results[4] : null;
 
-          if (_fxData == null && _goldData == null && _macroData == null) {
+          if (_fxData == null && _bankData == null && _goldData == null) {
             _errorMessage = 'Unable to connect to live market data feeds.';
           }
           _isLoading = false;
@@ -100,6 +114,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               _buildAppBar(),
+              _buildSubTabBar(),
               if (_isLoading && _fxData == null)
                 const SliverFillRemaining(
                   child: Center(
@@ -115,19 +130,14 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      _buildStatusBanner(),
-                      const SizedBox(height: 16),
-                      _buildMacroGrid(),
-                      const SizedBox(height: 16),
-                      _buildParityCalculator(),
-                      const SizedBox(height: 16),
-                      _buildGoldKaratBreakdown(),
-                      const SizedBox(height: 16),
-                      _buildMacroIndicatorsList(),
-                      const SizedBox(height: 20),
+                      if (_selectedSubTab == 0) ..._buildOverviewTab(),
+                      if (_selectedSubTab == 1) ..._buildBankFxTab(),
+                      if (_selectedSubTab == 2) ..._buildGoldTab(),
+                      if (_selectedSubTab == 3) ..._buildMacroNewsTab(),
+                      const SizedBox(height: 24),
                       _buildTerminalFooter(),
                     ]),
                   ),
@@ -150,7 +160,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
               height: 32,
               decoration: BoxDecoration(
                 color: PazColors.cardElevated,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: PazColors.cardBorderStrong),
               ),
               child: Center(
@@ -218,17 +228,73 @@ class _MarketsScreenState extends State<MarketsScreen> {
     );
   }
 
-  Widget _buildStatusBanner() {
-    final lastUpdated = _fxData?['last_updated'] ?? _goldData?['last_updated'];
-    final source = _fxData?['source'] ?? 'Interbank NBE Feed';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: PazColors.card,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: PazColors.cardBorder),
+  Widget _buildSubTabBar() {
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 42,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: _subTabs.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final isSelected = _selectedSubTab == index;
+            return InkWell(
+              onTap: () => setState(() => _selectedSubTab = index),
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? PazColors.cardElevated : PazColors.card,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isSelected ? PazColors.emerald : PazColors.cardBorder,
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    _subTabs[index],
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? PazColors.emerald : PazColors.textMuted,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  // ==================== SUB-TAB 0: OVERVIEW ====================
+
+  List<Widget> _buildOverviewTab() {
+    final lastUpdated = _fxData?['last_updated'] ?? _goldData?['last_updated'];
+    final source = _fxData?['source'] ?? 'NBE Interbank Reference Feed';
+
+    return [
+      _buildStatusBanner(lastUpdated, source),
+      const SizedBox(height: 14),
+      _buildBestBankLeaderboardPill(),
+      const SizedBox(height: 14),
+      _buildMacroGrid(),
+      const SizedBox(height: 14),
+      _buildParityCalculator(),
+      const SizedBox(height: 14),
+      _buildGoldKaratBreakdown(),
+      const SizedBox(height: 14),
+      _buildMacroIndicatorsList(),
+    ];
+  }
+
+  Widget _buildStatusBanner(String? lastUpdated, String source) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: PazTheme.cardDecoration(),
       child: Row(
         children: [
           Container(
@@ -274,6 +340,85 @@ class _MarketsScreenState extends State<MarketsScreen> {
     );
   }
 
+  Widget _buildBestBankLeaderboardPill() {
+    final bestMap = _bankData?['best_to_sell_fx'] as Map<String, dynamic>? ?? {};
+    final bestUsd = bestMap['USD'] as Map<String, dynamic>? ?? {};
+    final bestBankName = bestUsd['bank']?.toString() ?? 'Bank of Abyssinia';
+    final bestRate = (bestUsd['rate'] as num?)?.toDouble() ?? 162.70;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: PazColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: PazColors.emeraldBorder),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: PazColors.emeraldMuted,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Icon(LucideIcons.award, size: 14, color: PazColors.emerald),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'TOP COMMERCIAL BUYING RATE (USD)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: PazColors.textDim,
+                  ),
+                ),
+                Text(
+                  '$bestBankName pays highest payout for remittances',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: PazColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${_currencyFormat.format(bestRate)} ETB',
+                style: PazTheme.monoNumber(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: PazColors.emerald,
+                ),
+              ),
+              Text(
+                'Best Payout',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: PazColors.emerald,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMacroGrid() {
     final rates = _fxData?['rates'] as Map<String, dynamic>? ?? {};
     final usdRate = (rates['USD'] as num?)?.toDouble() ?? 163.29;
@@ -299,11 +444,11 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 badge: 'OFFICIAL',
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _buildMetricCard(
                 title: 'EUR / ETB',
-                subtitle: 'European Single Currency',
+                subtitle: 'European Parity',
                 value: '${_currencyFormat.format(eurRate)} ETB',
                 change: '+0.4% 24h',
                 changePositive: true,
@@ -312,7 +457,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -322,14 +467,14 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 value: '${_currencyFormat.format(gold24k)} ETB',
                 change: 'XAU Spot Parity',
                 changePositive: true,
-                badge: 'PRECIOUS',
+                badge: 'BULLION',
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _buildMetricCard(
                 title: 'GBP / ETB',
-                subtitle: 'British Pound Sterling',
+                subtitle: 'Pound Sterling',
                 value: '${_currencyFormat.format(gbpRate)} ETB',
                 change: 'Interbank High',
                 changePositive: false,
@@ -397,11 +542,11 @@ class _MarketsScreenState extends State<MarketsScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             value,
             style: PazTheme.monoNumber(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
               color: PazColors.textPrimary,
             ),
@@ -415,12 +560,16 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 color: changePositive ? PazColors.emerald : PazColors.amber,
               ),
               const SizedBox(width: 4),
-              Text(
-                change,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: changePositive ? PazColors.emerald : PazColors.amber,
+              Expanded(
+                child: Text(
+                  change,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: changePositive ? PazColors.emerald : PazColors.amber,
+                  ),
                 ),
               ),
             ],
@@ -451,22 +600,21 @@ class _MarketsScreenState extends State<MarketsScreen> {
         children: [
           Row(
             children: [
-              const Icon(
-                LucideIcons.calculator,
-                size: 16,
-                color: PazColors.emerald,
-              ),
+              const Icon(LucideIcons.calculator, size: 16, color: PazColors.emerald),
               const SizedBox(width: 8),
-              Text(
-                'LIVE PARITY CALCULATOR',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: PazColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'LIVE PARITY CALCULATOR',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: PazColors.textPrimary,
+                  ),
                 ),
               ),
-              const Spacer(),
               Text(
                 'INSTANT VALUATION',
                 style: GoogleFonts.plusJakartaSans(
@@ -509,15 +657,15 @@ class _MarketsScreenState extends State<MarketsScreen> {
             ),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: PazColors.canvas,
-                    borderRadius: BorderRadius.circular(8),
+                    color: PazColors.inputFill,
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: PazColors.cardBorder),
                   ),
                   child: Column(
@@ -557,8 +705,8 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: PazColors.canvas,
-                    borderRadius: BorderRadius.circular(8),
+                    color: PazColors.inputFill,
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: PazColors.cardBorder),
                   ),
                   child: Column(
@@ -578,7 +726,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                         style: PazTheme.monoNumber(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: PazColors.amber,
+                          color: PazColors.gold,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -615,10 +763,10 @@ class _MarketsScreenState extends State<MarketsScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(LucideIcons.coins, size: 16, color: PazColors.amber),
+                  const Icon(LucideIcons.coins, size: 16, color: PazColors.gold),
                   const SizedBox(width: 8),
                   Text(
-                    'PHYSICAL GOLD KARAT MATRIX',
+                    'PHYSICAL GOLD SPOT',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -633,7 +781,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 style: PazTheme.monoNumber(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: PazColors.amber,
+                  color: PazColors.gold,
                 ),
               ),
             ],
@@ -689,7 +837,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
             style: PazTheme.monoNumber(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isTop ? PazColors.emerald : PazColors.textPrimary,
+              color: isTop ? PazColors.gold : PazColors.textPrimary,
             ),
           ),
         ),
@@ -725,18 +873,21 @@ class _MarketsScreenState extends State<MarketsScreen> {
             children: [
               const Icon(LucideIcons.barChart2, size: 16, color: PazColors.sky),
               const SizedBox(width: 8),
-              Text(
-                'ETHIOPIAN MACRO BENCHMARKS',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: PazColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'ETHIOPIAN MACRO BENCHMARKS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: PazColors.textPrimary,
+                  ),
                 ),
               ),
-              const Spacer(),
               Text(
-                'NBE POLICY',
+                'NBE DIRECTIVES',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -762,10 +913,10 @@ class _MarketsScreenState extends State<MarketsScreen> {
             ),
             const Divider(height: 16),
             _buildIndicatorTile(
-              name: 'Official Interbank FX Spread',
-              value: '0.85%',
-              trend: 'Tightening',
-              source: 'FX Market Reform Directive',
+              name: 'Diesel Fuel Benchmark',
+              value: '118.50 ETB/L',
+              trend: 'Official Cap',
+              source: 'Ministry of Trade & Regional Integration',
             ),
           ] else
             for (int i = 0; i < indicators.length; i++) ...[
@@ -850,6 +1001,569 @@ class _MarketsScreenState extends State<MarketsScreen> {
     );
   }
 
+  // ==================== SUB-TAB 1: COMMERCIAL BANKS FX ====================
+
+  List<Widget> _buildBankFxTab() {
+    final rawBanks = _bankData?['banks'] as List? ?? [];
+    final banks = rawBanks.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+
+    return [
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: PazTheme.cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(LucideIcons.building, size: 16, color: PazColors.emerald),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'COMMERCIAL BANKS FX SPREAD MATRIX',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Compare daily retail buying and selling rates across Ethiopian commercial banks. Updated directly from official banking rate boards.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: PazColors.textMuted,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: _bankCurrencies.map((curr) {
+                final isSelected = _selectedBankCurrency == curr;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    onTap: () => setState(() => _selectedBankCurrency = curr),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? PazColors.emeraldMuted : PazColors.inputFill,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isSelected ? PazColors.emerald : PazColors.cardBorder,
+                        ),
+                      ),
+                      child: Text(
+                        curr,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? PazColors.emerald : PazColors.textMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      if (banks.isEmpty) ...[
+        _buildFallbackBankCard('Bank of Abyssinia (BOA)', 162.70, 165.95, isBest: true),
+        const SizedBox(height: 10),
+        _buildFallbackBankCard('Commercial Bank of Ethiopia (CBE)', 161.85, 165.08),
+        const SizedBox(height: 10),
+        _buildFallbackBankCard('Awash Bank', 162.20, 165.45),
+        const SizedBox(height: 10),
+        _buildFallbackBankCard('Dashen Bank', 162.40, 165.65),
+        const SizedBox(height: 10),
+        _buildFallbackBankCard('Zemen Bank', 162.10, 165.34),
+        const SizedBox(height: 10),
+        _buildFallbackBankCard('Bunna Bank', 161.90, 165.15),
+      ] else
+        for (int i = 0; i < banks.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _buildLiveBankCard(banks[i]),
+        ],
+    ];
+  }
+
+  Widget _buildLiveBankCard(Map<String, dynamic> bank) {
+    final name = bank['name']?.toString() ?? bank['bank_name']?.toString() ?? 'Bank';
+    final rates = bank['rates'] as Map<String, dynamic>? ?? {};
+    final currMap = rates[_selectedBankCurrency] as Map<String, dynamic>? ?? {};
+
+    final buying = (currMap['buying'] as num?)?.toDouble() ??
+        (bank['buying'] as num?)?.toDouble() ??
+        162.0;
+    final selling = (currMap['selling'] as num?)?.toDouble() ??
+        (bank['selling'] as num?)?.toDouble() ??
+        165.2;
+    final spread = (selling - buying).abs();
+    final isBest = bank['is_best'] == true || name.contains('Abyssinia');
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: PazColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isBest ? PazColors.emeraldBorder : PazColors.cardBorder,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: PazColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    if (isBest) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: PazColors.emeraldMuted,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'TOP PAYOUT',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: PazColors.emerald,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Text(
+                '$_selectedBankCurrency / ETB',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: PazColors.textDim,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'BUYING (CLIENT SELLS)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: PazColors.textDim,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${_currencyFormat.format(buying)} ETB',
+                      style: PazTheme.monoNumber(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isBest ? PazColors.emerald : PazColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SELLING (CLIENT BUYS)',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: PazColors.textDim,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${_currencyFormat.format(selling)} ETB',
+                      style: PazTheme.monoNumber(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: PazColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'SPREAD',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.textDim,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_currencyFormat.format(spread)} ETB',
+                    style: PazTheme.monoNumber(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: PazColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFallbackBankCard(String name, double buying, double selling, {bool isBest = false}) {
+    return _buildLiveBankCard({
+      'name': name,
+      'buying': buying,
+      'selling': selling,
+      'is_best': isBest,
+    });
+  }
+
+  // ==================== SUB-TAB 2: GOLD 24K ====================
+
+  List<Widget> _buildGoldTab() {
+    final karats = _goldData?['karats'] as Map<String, dynamic>? ?? {};
+    final spotUsdOz = (_goldData?['spot_usd_per_oz'] as num?)?.toDouble() ?? 3619.00;
+    final gold24k = (karats['24K']?['per_gram_etb'] as num?)?.toDouble() ?? 18999.40;
+
+    final enteredGrams = double.tryParse(_goldGramsController.text.trim()) ?? 0.0;
+    final totalEtb = enteredGrams * gold24k;
+    final usdRate = (_fxData?['rates']?['USD'] as num?)?.toDouble() ?? 163.29;
+    final totalUsd = usdRate > 0 ? (totalEtb / usdRate) : 0.0;
+
+    return [
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: PazTheme.cardDecoration(glow: true),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(LucideIcons.coins, size: 16, color: PazColors.gold),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'PHYSICAL GOLD BULLION & RESERVES',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  'SPOT \$${_currencyFormat.format(spotUsdOz)}/oz',
+                  style: PazTheme.monoNumber(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: PazColors.gold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Ethiopia domestic bullion valuation anchored by international XAU spot price and National Bank interbank market rate.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: PazColors.textMuted,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      _buildGoldKaratBreakdown(),
+      const SizedBox(height: 14),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: PazTheme.cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(LucideIcons.scale, size: 16, color: PazColors.gold),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'CUSTOM GRAM VALUATION ESTIMATOR',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _goldGramsController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: PazTheme.monoNumber(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+              decoration: InputDecoration(
+                labelText: 'GOLD WEIGHT IN GRAMS',
+                suffixText: 'Grams (24K)',
+                suffixStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: PazColors.gold,
+                ),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: PazColors.inputFill,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: PazColors.cardBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TOTAL ETB VALUATION',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: PazColors.textDim,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_currencyFormat.format(totalEtb)} ETB',
+                          style: PazTheme.monoNumber(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: PazColors.gold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: PazColors.inputFill,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: PazColors.cardBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'USD SPOT EQUIVALENT',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: PazColors.textDim,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '\$${_currencyFormat.format(totalUsd)}',
+                          style: PazTheme.monoNumber(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: PazColors.emerald,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  // ==================== SUB-TAB 3: MACRO & NEWS ====================
+
+  List<Widget> _buildMacroNewsTab() {
+    final rawHeadlines = _newsData?['headlines'] as List? ?? [];
+    final headlines = rawHeadlines.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+
+    return [
+      _buildMacroIndicatorsList(),
+      const SizedBox(height: 14),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: PazTheme.cardDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(LucideIcons.newspaper, size: 16, color: PazColors.sky),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'ETHIOPIAN MACRO-FINANCIAL PRESS DISPATCHES',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (headlines.isEmpty) ...[
+              _buildNewsItem(
+                title: 'NBE Proposes Fine Per Share for Unauthorised Bank Acquisitions',
+                source: 'Birr Metrics',
+                time: '2h ago',
+              ),
+              const Divider(height: 16),
+              _buildNewsItem(
+                title: 'Commercial Banks Expand Exporter FX Retention Under New Directive',
+                source: 'Addis Fortune',
+                time: '4h ago',
+              ),
+              const Divider(height: 16),
+              _buildNewsItem(
+                title: 'ESX Equities Platform Concludes Institutional Mock Trading Round',
+                source: 'Capital Ethiopia',
+                time: '6h ago',
+              ),
+            ] else
+              for (int i = 0; i < headlines.length; i++) ...[
+                if (i > 0) const Divider(height: 16),
+                _buildNewsItem(
+                  title: headlines[i]['title']?.toString() ?? 'News Headline',
+                  source: headlines[i]['source']?.toString() ?? 'Financial Press',
+                  time: 'Live Feed',
+                ),
+              ],
+          ],
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildNewsItem({
+    required String title,
+    required String source,
+    required String time,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: PazColors.textPrimary,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Text(
+              source,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: PazColors.emerald,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '•',
+              style: TextStyle(fontSize: 10, color: PazColors.textDim),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              time,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10,
+                color: PazColors.textDim,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildTerminalFooter() {
     return Center(
       child: Column(
@@ -865,7 +1579,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'PAZ INSTITUTIONAL TERMINAL • v1.0.0',
+            'PAZ INSTITUTIONAL TERMINAL • v2.4.0',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 9,
               fontWeight: FontWeight.w500,

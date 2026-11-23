@@ -4,7 +4,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/paz_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
+import '../alerts/alerts_screen.dart';
 import '../auth/login_screen.dart';
+import 'account_subpages.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -78,7 +80,7 @@ class _AccountScreenState extends State<AccountScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: PazColors.cardElevated,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           side: const BorderSide(color: PazColors.cardBorderStrong),
         ),
         title: Row(
@@ -195,15 +197,19 @@ class _AccountScreenState extends State<AccountScreen> {
                           _buildGuestCard()
                         else ...[
                           _buildProfileCard(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
                           _buildPreferencesCard(),
                         ],
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
+                        _buildRateAlertsLauncherCard(),
+                        const SizedBox(height: 14),
+                        _buildDocumentationCard(),
+                        const SizedBox(height: 14),
                         _buildTerminalSettingsCard(),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         if (!_isGuest) ...[
                           _buildDangerZoneCard(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
                         ],
                         _buildAuthActionButton(),
                         const SizedBox(height: 24),
@@ -271,7 +277,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: PazColors.cardElevated,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: PazColors.cardBorderStrong),
                 ),
                 child: const Center(
@@ -304,7 +310,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             'Sign in or register an account to sync live watchlist alerts, portfolio assets, and store custom bank preferences.',
             style: GoogleFonts.plusJakartaSans(
@@ -346,8 +352,8 @@ class _AccountScreenState extends State<AccountScreen> {
             height: 50,
             decoration: BoxDecoration(
               color: PazColors.cardElevated,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: PazColors.emerald.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: PazColors.emeraldBorder),
             ),
             child: Center(
               child: Text(
@@ -458,6 +464,161 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  Widget _buildRateAlertsLauncherCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: PazTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.bell, size: 16, color: PazColors.emerald),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'WATCHLIST & RATE ALERTS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: PazColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Configure real-time price triggers for floating USD, EUR, and physical 24K gold movements.',
+            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: PazColors.textMuted, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AlertsScreen()),
+                );
+              },
+              icon: const Icon(LucideIcons.slidersHorizontal, size: 16, color: PazColors.emerald),
+              label: const Text('Manage Rate Alert Triggers'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentationCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: PazTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.bookOpen, size: 16, color: PazColors.gold),
+              const SizedBox(width: 8),
+              Text(
+                'INSTITUTIONAL DISCLOSURES',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  color: PazColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildSubPageRow(
+            icon: LucideIcons.info,
+            title: 'About PAZ Terminal',
+            subtitle: 'Methodology, mission & NBE reform',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AboutPazScreen()),
+            ),
+          ),
+          const Divider(height: 18),
+          _buildSubPageRow(
+            icon: LucideIcons.helpCircle,
+            title: 'Frequently Asked Questions',
+            subtitle: 'Floating FX, gold parity & remittances',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FaqScreen()),
+            ),
+          ),
+          const Divider(height: 18),
+          _buildSubPageRow(
+            icon: LucideIcons.scale,
+            title: 'Legal & Regulatory Notices',
+            subtitle: 'NBE directive compliance & disclaimers',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const LegalScreen()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubPageRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: PazColors.cardElevated,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: PazColors.cardBorderStrong),
+              ),
+              child: Icon(icon, size: 16, color: PazColors.textSecondary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: PazColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: PazColors.textDim,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(LucideIcons.chevronRight, size: 16, color: PazColors.textDim),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTerminalSettingsCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -483,7 +644,7 @@ class _AccountScreenState extends State<AccountScreen> {
           const SizedBox(height: 14),
           _buildInfoRow(
             label: 'Color Theme',
-            value: 'Obsidian Dark (#080A0D)',
+            value: 'Obsidian Dark (#0A0A0A)',
             badge: 'LOCKED',
           ),
           const Divider(height: 20),
@@ -559,7 +720,7 @@ class _AccountScreenState extends State<AccountScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: PazColors.card,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: PazColors.red.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -647,7 +808,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildVersionFooter() {
     return Center(
       child: Text(
-        'PAZ FINANCIAL MOBILE • v1.0.0 (BUILD 1)',
+        'PAZ FINANCIAL MOBILE • v2.4.0 (BUILD 2)',
         style: GoogleFonts.plusJakartaSans(
           fontSize: 9,
           fontWeight: FontWeight.w600,

@@ -4,33 +4,48 @@ import 'package:google_fonts/google_fonts.dart';
 class PazColors {
   PazColors._();
 
-  // Backgrounds & Surfaces
-  static const Color canvas = Color(0xFF080A0D);
-  static const Color surface = Color(0xFF0D1117);
-  static const Color card = Color(0xFF12151B);
-  static const Color cardElevated = Color(0xFF161B22);
-  static const Color inputFill = Color(0xFF080A0D);
+  // Backgrounds & Surfaces (1:1 with paz-web CSS tokens)
+  static const Color canvas = Color(0xFF0A0A0A); // --bg-app: deep obsidian base canvas
+  static const Color surface = Color(0xFF111111); // --bg-surface: navigation & elevated bar
+  static const Color card = Color(0xFF141414); // --bg-card: primary card & data panel
+  static const Color cardHover = Color(0xFF181818); // --bg-card-hover: hover / active card
+  static const Color cardElevated = Color(0xFF181818); // nested elevation surface
+  static const Color inputFill = Color(0xFF0C0C0C); // --bg-inset: control & input surface
+  static const Color highlight = Color(0x08FFFFFF); // --bg-highlight: rgba(255, 255, 255, 0.03)
 
-  // Borders
-  static const Color cardBorder = Color(0x14FFFFFF); // rgba(255, 255, 255, 0.08)
-  static const Color cardBorderStrong = Color(0x26FFFFFF); // rgba(255, 255, 255, 0.15)
-  static const Color inputBorder = Color(0x1FFFFFFF); // rgba(255, 255, 255, 0.12)
+  // Razor-sharp 1px Borders
+  static const Color borderSubtle = Color(0xFF222222); // --border-subtle
+  static const Color cardBorder = Color(0xFF282828); // --border-card
+  static const Color cardBorderStrong = Color(0xFF333333); // --border-strong
+  static const Color inputBorder = Color(0xFF282828); // --border-subtle
+  static const Color borderFocus = Color(0xFF10B981); // --border-focus
 
-  // Accents
-  static const Color emerald = Color(0xFF10B981);
+  // Brand Gold
+  static const Color gold = Color(0xFFD4AF37); // --gold
+  static const Color goldMuted = Color(0xFFB3922D); // --gold-muted
+  static const Color goldSubtle = Color(0x1AD4AF37); // rgba(212, 175, 55, 0.10)
+  static const Color goldHover = Color(0xFFE5C158); // --gold-hover
+
+  // Semantic Financial Accents
+  static const Color emerald = Color(0xFF10B981); // --green
   static const Color emeraldHover = Color(0xFF059669);
-  static const Color emeraldMuted = Color(0x1F10B981); // 12% opacity
-  static const Color sky = Color(0xFF38BDF8);
-  static const Color skyMuted = Color(0x1F38BDF8);
-  static const Color amber = Color(0xFFF59E0B);
-  static const Color red = Color(0xFFEF4444);
-  static const Color redMuted = Color(0x1FEF4444);
+  static const Color emeraldMuted = Color(0x1A10B981); // rgba(16, 185, 129, 0.10)
+  static const Color emeraldBorder = Color(0x4010B981); // rgba(16, 185, 129, 0.25)
 
-  // Typography
-  static const Color textPrimary = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFFE2E8F0);
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color textDim = Color(0xFF64748B);
+  static const Color red = Color(0xFFF43F5E); // --red (rose)
+  static const Color redMuted = Color(0x1AF43F5E); // rgba(244, 63, 94, 0.10)
+  static const Color redBorder = Color(0x40F43F5E); // rgba(244, 63, 94, 0.25)
+
+  static const Color sky = Color(0xFF38BDF8);
+  static const Color skyMuted = Color(0x1A38BDF8);
+  static const Color amber = Color(0xFFF59E0B);
+  static const Color amberMuted = Color(0x1AF59E0B);
+
+  // High-contrast Typography Hierarchy (All WCAG AAA/AA compliant)
+  static const Color textPrimary = Color(0xFFFAFAFA); // --text-primary
+  static const Color textSecondary = Color(0xFFD4D4D4); // --text-secondary
+  static const Color textMuted = Color(0xFFA3A3A3); // --text-muted
+  static const Color textDim = Color(0xFF94A3B8); // --text-dim
 }
 
 class PazTheme {
@@ -146,19 +161,19 @@ class PazTheme {
           fontSize: 13,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: PazColors.inputBorder, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: PazColors.emerald, width: 1.5),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: PazColors.borderFocus, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: PazColors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: PazColors.red, width: 1.5),
         ),
       ),
@@ -169,7 +184,7 @@ class PazTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
           ),
           textStyle: GoogleFonts.plusJakartaSans(
             fontSize: 13,
@@ -184,7 +199,7 @@ class PazTheme {
           side: const BorderSide(color: PazColors.cardBorderStrong),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
           ),
           textStyle: GoogleFonts.plusJakartaSans(
             fontSize: 13,
@@ -202,14 +217,14 @@ class PazTheme {
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: PazColors.cardBorder,
+        color: PazColors.borderSubtle,
         thickness: 1,
         space: 1,
       ),
     );
   }
 
-  // Monospace numeric styling with Tabular Figures
+  // Monospace numeric styling with Tabular Figures (JetBrains Mono)
   static TextStyle monoNumber({
     double fontSize = 14,
     FontWeight fontWeight = FontWeight.w600,
@@ -223,7 +238,7 @@ class PazTheme {
     );
   }
 
-  // Standard PAZ Card Decoration
+  // Standard PAZ Card Decoration (strictly uniform border)
   static BoxDecoration cardDecoration({
     Color background = PazColors.card,
     Color borderColor = PazColors.cardBorder,
@@ -237,7 +252,7 @@ class PazTheme {
       boxShadow: glow
           ? [
               BoxShadow(
-                color: PazColors.emerald.withValues(alpha: 0.12),
+                color: PazColors.emerald.withValues(alpha: 0.10),
                 blurRadius: 16,
                 spreadRadius: 1,
               ),
