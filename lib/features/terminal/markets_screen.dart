@@ -504,28 +504,36 @@ class _MarketsScreenState extends State<MarketsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: PazColors.textPrimary,
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: PazColors.textPrimary,
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: PazColors.cardElevated,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: PazColors.cardBorderStrong),
-                ),
-                child: Text(
-                  badge,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                    color: PazColors.emerald,
+              const SizedBox(width: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: PazColors.cardElevated,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: PazColors.cardBorderStrong),
+                  ),
+                  child: Text(
+                    badge,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.emerald,
+                    ),
                   ),
                 ),
               ),
@@ -543,12 +551,16 @@ class _MarketsScreenState extends State<MarketsScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 10),
-          Text(
-            value,
-            style: PazTheme.monoNumber(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: PazColors.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: PazTheme.monoNumber(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: PazColors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(height: 6),
