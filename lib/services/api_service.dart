@@ -371,6 +371,44 @@ class ApiService {
     }
   }
 
+  Future<String> forgotPassword({required String email}) async {
+    try {
+      final res = await http.post(
+        Uri.parse(ApiConfig.forgotPassword),
+        headers: await _headers(requiresAuth: false),
+        body: jsonEncode({
+          'email': email.trim(),
+        }),
+      );
+      final data = _processResponse(res) as Map<String, dynamic>?;
+      return data?['message']?.toString() ??
+          'If an account exists, a reset code has been sent';
+    } on SocketException {
+      throw ApiException('Network error: Unable to reach PAZ server');
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final res = await http.post(
+        Uri.parse(ApiConfig.resetPassword),
+        headers: await _headers(requiresAuth: false),
+        body: jsonEncode({
+          'email': email.trim(),
+          'code': code.trim(),
+          'new_password': newPassword,
+        }),
+      );
+      _processResponse(res);
+    } on SocketException {
+      throw ApiException('Network error: Unable to reach PAZ server');
+    }
+  }
+
   // ==================== ASK PAZ (CONVERSATIONAL AI) ====================
 
   Future<Map<String, dynamic>> sendAiChat(String message) async {

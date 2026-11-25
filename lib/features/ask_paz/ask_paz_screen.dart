@@ -10,12 +10,14 @@ class ChatMessage {
   final bool isUser;
   final DateTime timestamp;
   final List<String> suggestions;
+  final bool isQuotaLimit;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
     this.suggestions = const [],
+    this.isQuotaLimit = false,
   });
 }
 
@@ -149,6 +151,34 @@ class _AskPazScreenState extends State<AskPazScreen> {
       if (mounted) {
         setState(() {
           _messages.add(agentMsg);
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        final isRateLimit = e.statusCode == 429;
+        final isAuthError = e.statusCode == 401;
+        final String displayText;
+        if (isRateLimit) {
+          displayText = e.message.isNotEmpty
+              ? e.message
+              : "You've reached your daily Ask PAZ limit. Your quota resets at midnight UTC.";
+        } else if (isAuthError) {
+          displayText = 'Please sign in to your PAZ account to use Ask PAZ.';
+        } else {
+          displayText = 'Error contacting PAZ agent: ${e.message}\nPlease verify network connection.';
+        }
+
+        final noticeMsg = ChatMessage(
+          text: displayText,
+          isUser: false,
+          timestamp: DateTime.now(),
+          suggestions: const [],
+          isQuotaLimit: isRateLimit || isAuthError,
+        );
+        setState(() {
+          _messages.add(noticeMsg);
           _isLoading = false;
         });
         _scrollToBottom();
@@ -518,9 +548,13 @@ class _AskPazScreenState extends State<AskPazScreen> {
           ),
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
-            color: PazColors.card,
+            color: msg.isQuotaLimit ? PazColors.amberMuted : PazColors.card,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: PazColors.cardBorder),
+            border: Border.all(
+              color: msg.isQuotaLimit
+                  ? PazColors.amber.withValues(alpha: 0.35)
+                  : PazColors.cardBorder,
+            ),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -532,7 +566,7 @@ class _AskPazScreenState extends State<AskPazScreen> {
                   bottom: 0,
                   width: 3.5,
                   child: Container(
-                    color: PazColors.emerald,
+                    color: msg.isQuotaLimit ? PazColors.amber : PazColors.emerald,
                   ),
                 ),
                 Padding(
@@ -542,18 +576,22 @@ class _AskPazScreenState extends State<AskPazScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(LucideIcons.terminal, size: 12, color: PazColors.emerald),
+                          Icon(
+                            msg.isQuotaLimit ? LucideIcons.clock : LucideIcons.terminal,
+                            size: 12,
+                            color: msg.isQuotaLimit ? PazColors.amber : PazColors.emerald,
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'PAZ INTELLIGENCE',
+                              msg.isQuotaLimit ? 'DAILY QUOTA NOTICE' : 'PAZ INTELLIGENCE',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
-                                color: PazColors.emerald,
+                                color: msg.isQuotaLimit ? PazColors.amber : PazColors.emerald,
                               ),
                             ),
                           ),

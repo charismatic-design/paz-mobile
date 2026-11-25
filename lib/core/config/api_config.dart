@@ -7,6 +7,8 @@ class ApiConfig {
   // Auth endpoints
   static const String login = '$baseUrl/api/auth/login';
   static const String register = '$baseUrl/api/auth/register';
+  static const String forgotPassword = '$baseUrl/auth/forgot-password';
+  static const String resetPassword = '$baseUrl/auth/reset-password';
   static const String me = '$baseUrl/api/auth/me';
   static const String preferences = '$baseUrl/api/auth/preferences';
   static const String deleteAccount = '$baseUrl/auth/account';
