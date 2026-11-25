@@ -65,6 +65,67 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _handleSignOut() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: PazColors.cardElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: PazColors.cardBorderStrong),
+        ),
+        title: Row(
+          children: [
+            const Icon(LucideIcons.logOut, color: PazColors.emerald, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Sign Out',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: PazColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to sign out?',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: PazColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: PazColors.textMuted,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PazColors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              'Sign Out',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     await _apiService.logout();
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
@@ -202,6 +263,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         ],
                         const SizedBox(height: 14),
                         _buildRateAlertsLauncherCard(),
+                        const SizedBox(height: 14),
+                        _buildProPlanCard(),
                         const SizedBox(height: 14),
                         _buildDocumentationCard(),
                         const SizedBox(height: 14),
@@ -508,6 +571,264 @@ class _AccountScreenState extends State<AccountScreen> {
               label: const Text('Manage Rate Alert Triggers'),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  static const List<Map<String, String>> _proPerks = [
+    {
+      'title': 'Custom USD & Gold Price Alerts',
+      'desc': 'Get instant alerts when USD/ETB or 24K gold crosses your target price.',
+    },
+    {
+      'title': 'Unlimited Bank SMS & Statement Tracking + Inflation Check',
+      'desc': 'Sync all your bank accounts and see how your savings hold up against inflation.',
+    },
+    {
+      'title': 'Best-Bank Rate Alerts',
+      'desc': 'Know right away when a bank offers a higher USD, EUR, or GBP buying rate.',
+    },
+    {
+      'title': '100/day Ask PAZ AI messages (vs. 10/day Free)',
+      'desc': 'Ten times more daily AI questions tailored to your saved balances and goals.',
+    },
+  ];
+
+  void _showProUpgradeSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: PazColors.cardElevated,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+        side: BorderSide(color: PazColors.cardBorderStrong),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(LucideIcons.sparkles, size: 18, color: PazColors.emerald),
+                      const SizedBox(width: 8),
+                      Text(
+                        'UPGRADE TO PAZ PRO',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: PazColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.x, size: 18, color: PazColors.textMuted),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'All live XY price charts are free for everyone. Upgrade to PAZ Pro for automated alerts, unlimited bank tracking, and expanded Ask PAZ AI:',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: PazColors.textMuted,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ..._proPerks.map(
+                (perk) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: PazColors.emeraldMuted,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.check, size: 12, color: PazColors.emerald),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              perk['title']!,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: PazColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              perk['desc']!,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: PazColors.textMuted,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: PazColors.card,
+                        content: Text(
+                          'PAZ Pro early access is managed via pazfinance.vercel.app/about#contact.',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: PazColors.textPrimary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Request PAZ Pro Access',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: PazColors.canvas,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProPlanCard() {
+    final plan = (_user?['plan']?.toString() ?? 'free').toLowerCase();
+    final isPro = plan == 'pro';
+    final usedToday = (_user?['ai_messages_today'] as num?)?.toInt() ?? 0;
+    final limit = isPro ? 100 : 10;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: PazTheme.cardDecoration(glow: true),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.sparkles, size: 16, color: PazColors.emerald),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'PAZ PLAN & PRO PERKS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: PazColors.textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: PazColors.emeraldMuted,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: PazColors.emerald.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  isPro ? 'PAZ PRO' : 'FREE PLAN',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: PazColors.emerald,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'All live XY price charts are free for everyone. Upgrade to PAZ Pro for:',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: PazColors.textMuted,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ..._proPerks.map(
+            (perk) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(LucideIcons.checkCircle2, size: 13, color: PazColors.emerald),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      perk['title']!,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: PazColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (!_isGuest)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'Ask PAZ today: $usedToday / $limit messages',
+                style: PazTheme.monoNumber(
+                  fontSize: 11,
+                  color: PazColors.textDim,
+                ),
+              ),
+            ),
+          if (!isPro)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _showProUpgradeSheet,
+                icon: const Icon(LucideIcons.arrowUpRight, size: 16),
+                label: const Text('Upgrade to PAZ Pro'),
+              ),
+            ),
         ],
       ),
     );
