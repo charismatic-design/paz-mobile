@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/paz_theme.dart';
@@ -68,7 +69,7 @@ class AboutPazScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Following the historic July 28, 2024 National Bank of Ethiopia foreign exchange market liberalization (Directive FXD/01/2024), PAZ provides real-time transparency into floating interbank benchmarks, commercial bank FX spreads, physical gold spot parity, and emerging capital markets.',
+                    'Following the historic July 28, 2024 National Bank of Ethiopia foreign exchange market liberalization (Directive FXD/01/2024), PAZ provides real-time transparency into floating interbank benchmarks, bank exchange rates, today\'s gold prices, and upcoming Ethiopian stocks.',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       color: PazColors.textMuted,
@@ -82,7 +83,7 @@ class AboutPazScreen extends StatelessWidget {
             _buildSection(
               title: 'DATA SOVEREIGNTY & SOURCES',
               content:
-                  'PAZ directly ingests rate boards from the Commercial Bank of Ethiopia (CBE), leading private commercial banks (Awash, Dashen, Bank of Abyssinia, Zemen, Bunna), the National Bank of Ethiopia (NBE), and Gold-API for live 24K XAU bullion parity.',
+                  'PAZ directly ingests rate boards from the Commercial Bank of Ethiopia (CBE), leading private commercial banks (Awash, Dashen, Bank of Abyssinia, Zemen, Bunna), the National Bank of Ethiopia (NBE), and Gold-API for live 24K gold prices.',
             ),
             const SizedBox(height: 12),
             _buildSection(
@@ -133,7 +134,7 @@ class FaqScreen extends StatelessWidget {
   final List<Map<String, String>> _faqs = const [
     {
       'q': 'What is the Ethiopian floating exchange rate reform?',
-      'a': 'On July 28, 2024, the National Bank of Ethiopia transitioned from a decades-long crawling peg regime to a market-determined floating exchange rate. This eliminated the parallel market spread and opened up interbank and retail currency operations.',
+      'a': 'On July 28, 2024, the National Bank of Ethiopia transitioned from a decades-long crawling peg regime to a market-determined floating exchange rate. This reduced the parallel market gap and opened up interbank and retail currency operations.',
     },
     {
       'q': 'Why do commercial bank rates differ from the NBE interbank rate?',
@@ -264,13 +265,13 @@ class LegalScreen extends StatelessWidget {
             _buildSection(
               title: 'NO INVESTMENT ADVICE',
               content:
-                  'All exchange rates, bullion valuations, treasury yields, and automated AI analysis are generated for informational, telemetry, and educational purposes only. Nothing contained within PAZ constitutes investment, financial, tax, or legal advice.',
+                  'All exchange rates, gold prices, treasury yields, and automated AI analysis are generated for informational, telemetry, and educational purposes only. Nothing contained within PAZ constitutes investment, financial, tax, or legal advice.',
             ),
             const SizedBox(height: 12),
             _buildSection(
               title: 'NBE DIRECTIVE COMPLIANCE',
               content:
-                  'All foreign exchange rate publication and commercial bank spread displays adhere to National Bank of Ethiopia Directive No. FXD/01/2024 on Foreign Exchange Market Operations.',
+                  'All foreign exchange rate publication and bank exchange rate displays adhere to National Bank of Ethiopia Directive No. FXD/01/2024 on Foreign Exchange Market Operations.',
             ),
             const SizedBox(height: 12),
             _buildSection(
@@ -309,6 +310,234 @@ class LegalScreen extends StatelessWidget {
               height: 1.45,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class HowToUseScreen extends StatelessWidget {
+  const HowToUseScreen({super.key});
+
+  static const List<String> _exampleQuestions = [
+    'Which bank has the highest USD buying rate today?',
+    'How much did gold change this month?',
+    'How much Birr will I get for \$1,000 today?',
+    'Compare Gov Savings Rate vs keeping cash in Birr',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: PazColors.canvas,
+      appBar: AppBar(
+        title: Text(
+          'HOW TO USE PAZ',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.8,
+          ),
+        ),
+        backgroundColor: PazColors.surface,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildGuideCard(
+            step: '01',
+            title: 'Compare Bank Exchange Rates',
+            description:
+                'Open Markets -> Bank Rates to see which Ethiopian bank (CBE, Abyssinia, Awash, Dashen, Bunna, or Zemen) pays the most Birr for USD, EUR, GBP, or AED right now.',
+            tip:
+                'All live XY price charts on Overview, Bank Rates, and Gold Prices are 100% free for both Free and Guest users.',
+          ),
+          const SizedBox(height: 14),
+          _buildGuideCard(
+            step: '02',
+            title: 'Track Gold Prices & Market News',
+            description:
+                'Open Markets -> Gold Prices to check today’s 24K, 22K, 21K, and 18K gold prices per gram in ETB, and read Market News to spot trends before buying or selling.',
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: PazTheme.cardDecoration(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _stepBadge('03'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Ask PAZ AI Anything',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: PazColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Tap the Ask PAZ tab to ask plain-English questions about today’s rates. Tap any example below to copy it:',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: PazColors.textMuted,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ..._exampleQuestions.map(
+                  (q) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: q));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: PazColors.card,
+                            content: Text(
+                              'Copied question to clipboard',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: PazColors.textPrimary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: PazColors.inputFill,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: PazColors.borderSubtle),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '"$q"',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: PazColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'COPY',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: PazColors.emerald,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          _buildGuideCard(
+            step: '04',
+            title: 'Free Account vs. Guest Mode',
+            description:
+                'Guest Mode lets you check Overview, Bank Rates, Gold Prices, Market News, and all XY charts without signing in.',
+            tip:
+                'Create a Free Account to unlock Ask PAZ AI (10 messages/day), save your bank balances, and set custom price alerts.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _stepBadge(String step) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: PazColors.emeraldMuted,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: PazColors.emerald.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        step,
+        style: GoogleFonts.jetBrainsMono(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: PazColors.emerald,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuideCard({
+    required String step,
+    required String title,
+    required String description,
+    String? tip,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: PazTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _stepBadge(step),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: PazColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            description,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: PazColors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          if (tip != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: PazColors.inputFill,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: PazColors.borderSubtle),
+              ),
+              child: Text(
+                tip,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  color: PazColors.textMuted,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

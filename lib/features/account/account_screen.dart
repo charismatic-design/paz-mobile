@@ -244,7 +244,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ),
                   Text(
-                    'TERMINAL CONFIGURATION & INSTITUTIONAL PROFILE',
+                    'ACCOUNT & PREFERENCES',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
@@ -338,7 +338,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfileCard() {
-    final fullName = _user?['full_name']?.toString() ?? 'PAZ Institutional Member';
+    final fullName = _user?['full_name']?.toString() ?? 'PAZ Member';
     final email = _user?['email']?.toString() ?? 'user@paz.et';
     final initials = _getInitials(fullName);
 
@@ -393,7 +393,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'INSTITUTIONAL',
+                        'FREE PLAN',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 8,
                           fontWeight: FontWeight.w700,
@@ -525,7 +525,7 @@ class _AccountScreenState extends State<AccountScreen> {
               const Icon(LucideIcons.bookOpen, size: 16, color: PazColors.gold),
               const SizedBox(width: 8),
               Text(
-                'INSTITUTIONAL DISCLOSURES',
+                'HELP & DISCLOSURES',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -536,6 +536,15 @@ class _AccountScreenState extends State<AccountScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          _buildSubPageRow(
+            icon: LucideIcons.compass,
+            title: 'How to Use PAZ',
+            subtitle: 'Bank rates, gold prices, Ask PAZ & Guest Mode',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const HowToUseScreen()),
+            ),
+          ),
+          const Divider(height: 18),
           _buildSubPageRow(
             icon: LucideIcons.info,
             title: 'About PAZ Terminal',

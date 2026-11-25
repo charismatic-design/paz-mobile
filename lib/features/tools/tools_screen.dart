@@ -31,13 +31,78 @@ class _ToolsScreenState extends State<ToolsScreen> {
   Map<String, dynamic>? _remittanceData;
   String? _remittanceError;
 
-  // ESX waitlist state
+  // ESX waitlist & Apple Stocks preview state
   final TextEditingController _waitlistEmailController = TextEditingController();
   bool _isWaitlistSubmitting = false;
   bool _waitlistSuccess = false;
   String? _waitlistError;
+  String _selectedEsxTicker = 'TELE';
+  String _selectedEsxRange = '1D';
 
-  final List<String> _subTabs = ['Remittance', 'ESX / Equities', 'Rate Alerts'];
+  static const List<Map<String, dynamic>> _esxStocks = [
+    {
+      'ticker': 'TELE',
+      'company': 'Ethio Telecom',
+      'price': 124.50,
+      'changePct': 2.45,
+      'series': {
+        '1D': [121.2, 121.8, 121.5, 122.4, 122.1, 123.0, 123.6, 124.1, 124.5],
+        '1W': [118.4, 119.2, 120.5, 119.8, 121.4, 122.9, 124.5],
+        '1M': [112.0, 114.5, 113.8, 116.2, 118.9, 120.4, 122.1, 124.5],
+        '1Y': [96.0, 101.5, 104.2, 108.0, 111.5, 115.8, 119.4, 124.5],
+      },
+    },
+    {
+      'ticker': 'WGBX',
+      'company': 'Wegagen Bank',
+      'price': 88.20,
+      'changePct': 1.15,
+      'series': {
+        '1D': [87.1, 87.3, 87.0, 87.5, 87.8, 87.6, 88.0, 88.2],
+        '1W': [85.6, 86.0, 86.4, 86.1, 87.0, 87.7, 88.2],
+        '1M': [82.4, 83.1, 84.5, 84.0, 85.8, 86.9, 88.2],
+        '1Y': [74.0, 76.8, 79.2, 81.0, 83.5, 86.0, 88.2],
+      },
+    },
+    {
+      'ticker': 'AWAB',
+      'company': 'Awash Bank',
+      'price': 142.80,
+      'changePct': -0.65,
+      'series': {
+        '1D': [143.8, 143.5, 143.9, 143.4, 143.1, 143.3, 142.9, 142.8],
+        '1W': [145.1, 144.6, 144.9, 144.0, 143.6, 143.1, 142.8],
+        '1M': [146.5, 145.8, 145.0, 144.2, 143.9, 143.2, 142.8],
+        '1Y': [132.0, 136.4, 139.0, 141.5, 144.8, 143.5, 142.8],
+      },
+    },
+    {
+      'ticker': 'BOAX',
+      'company': 'Bank of Abyssinia',
+      'price': 116.40,
+      'changePct': 1.80,
+      'series': {
+        '1D': [114.2, 114.6, 114.4, 115.0, 115.3, 115.8, 116.1, 116.4],
+        '1W': [112.5, 113.1, 113.8, 114.2, 115.0, 115.7, 116.4],
+        '1M': [108.0, 109.4, 111.2, 110.8, 112.9, 114.6, 116.4],
+        '1Y': [94.5, 99.0, 103.2, 106.8, 110.4, 113.8, 116.4],
+      },
+    },
+    {
+      'ticker': 'GDAB',
+      'company': 'Gadaa Bank',
+      'price': 54.10,
+      'changePct': -1.10,
+      'series': {
+        '1D': [54.7, 54.6, 54.8, 54.5, 54.4, 54.3, 54.2, 54.1],
+        '1W': [55.3, 55.0, 54.8, 54.9, 54.5, 54.3, 54.1],
+        '1M': [56.8, 56.2, 55.9, 55.4, 54.9, 54.4, 54.1],
+        '1Y': [51.0, 52.4, 53.8, 55.6, 55.0, 54.5, 54.1],
+      },
+    },
+  ];
+
+  final List<String> _subTabs = ['Remittance', 'Stocks (Soon)', 'Rate Alerts'];
 
   @override
   void initState() {
@@ -87,7 +152,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
     final email = _waitlistEmailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       setState(() {
-        _waitlistError = 'Please enter a valid institutional or personal email address.';
+        _waitlistError = 'Please enter a valid email address.';
       });
       return;
     }
@@ -667,10 +732,52 @@ class _ToolsScreenState extends State<ToolsScreen> {
     });
   }
 
-  // ==================== ESX CONTENT ====================
+  // ==================== ESX CONTENT (APPLE STOCKS PREVIEW) ====================
 
   List<Widget> _buildEsxContent() {
+    final selectedStock = _esxStocks.firstWhere(
+      (s) => s['ticker'] == _selectedEsxTicker,
+      orElse: () => _esxStocks.first,
+    );
+    final ticker = selectedStock['ticker'] as String;
+    final company = selectedStock['company'] as String;
+    final price = (selectedStock['price'] as num).toDouble();
+    final changePct = (selectedStock['changePct'] as num).toDouble();
+    final isPos = changePct >= 0;
+    final seriesMap = selectedStock['series'] as Map<String, List<double>>;
+    final points = seriesMap[_selectedEsxRange] ?? seriesMap['1D']!;
+    final minVal = points.reduce((a, b) => a < b ? a : b);
+    final maxVal = points.reduce((a, b) => a > b ? a : b);
+
     return [
+      // Coming Soon Banner
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: PazColors.emeraldMuted,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: PazColors.emerald.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(LucideIcons.sparkles, size: 15, color: PazColors.emerald),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'ESX Stock Market • Coming Soon — Tap any company below to preview its interactive price chart using sample ETB prices.',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  color: PazColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+
+      // Interactive Preview XY Line Chart
       Container(
         padding: const EdgeInsets.all(16),
         decoration: PazTheme.cardDecoration(glow: true),
@@ -678,90 +785,309 @@ class _ToolsScreenState extends State<ToolsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(LucideIcons.trendingUp, size: 16, color: PazColors.emerald),
-                const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    'ETHIOPIAN SECURITIES EXCHANGE (ESX)',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                      color: PazColors.textPrimary,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            ticker,
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: PazColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: PazColors.emeraldMuted,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: PazColors.emerald.withValues(alpha: 0.3)),
+                            ),
+                            child: Text(
+                              'PREVIEW',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                color: PazColors.emerald,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        company,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: PazColors.textMuted,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: PazColors.emeraldMuted,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'LAUNCH READY',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                      color: PazColors.emerald,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${price.toStringAsFixed(2)} ETB',
+                      style: PazTheme.monoNumber(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: PazColors.textPrimary,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isPos ? PazColors.emerald : PazColors.red,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '${isPos ? '+' : ''}${changePct.toStringAsFixed(2)}%',
+                        style: PazTheme.monoNumber(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isPos ? const Color(0xFF06281C) : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              'Ethiopia’s first organized electronic exchange. PAZ is preparing real-time order-book telemetry, trade prints, and corporate bond yields.',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                color: PazColors.textMuted,
-                height: 1.4,
+            const SizedBox(height: 12),
+
+            // 1D, 1W, 1M, 1Y toggles
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: PazColors.inputFill,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: PazColors.borderSubtle),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: ['1D', '1W', '1M', '1Y'].map((range) {
+                  final active = _selectedEsxRange == range;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedEsxRange = range),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: active ? PazColors.emeraldMuted : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        range,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: active ? PazColors.emerald : PazColors.textMuted,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // XY Line Chart with ETB labels
+            Container(
+              height: 150,
+              padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+              decoration: BoxDecoration(
+                color: PazColors.inputFill,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: PazColors.borderSubtle),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomPaint(
+                      size: Size.infinite,
+                      painter: _EsxLineChartPainter(
+                        points: points,
+                        color: isPos ? PazColors.emerald : PazColors.red,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${maxVal.toStringAsFixed(1)} ETB',
+                        style: PazTheme.monoNumber(fontSize: 10, color: PazColors.textDim),
+                      ),
+                      Text(
+                        '${((minVal + maxVal) / 2).toStringAsFixed(1)} ETB',
+                        style: PazTheme.monoNumber(fontSize: 10, color: PazColors.textDim),
+                      ),
+                      Text(
+                        '${minVal.toStringAsFixed(1)} ETB',
+                        style: PazTheme.monoNumber(fontSize: 10, color: PazColors.textDim),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
       const SizedBox(height: 14),
+
+      // Apple Stocks-style Horizontal Watchlist Rows
       Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: PazTheme.cardDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'MARKET ARCHITECTURE',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-                color: PazColors.textDim,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'ETHIOPIAN STOCKS WATCHLIST',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: PazColors.textDim,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Tap row to preview',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    color: PazColors.textDim,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            _buildEsxSegmentRow(
-              title: 'Equities Main Board',
-              subtitle: 'Commercial Banks, Telecom, Breweries & SOEs',
-              status: 'Mock Trading',
-            ),
-            const Divider(height: 16),
-            _buildEsxSegmentRow(
-              title: 'Government Securities',
-              subtitle: 'NBE T-Bills (28d, 91d, 182d, 364d) & Sovereign Bonds',
-              status: 'Secondary Trading',
-            ),
-            const Divider(height: 16),
-            _buildEsxSegmentRow(
-              title: 'Corporate Debt & Sukuk',
-              subtitle: 'Commercial paper & Islamic capital instruments',
-              status: 'Structuring',
-            ),
+            const SizedBox(height: 8),
+            ..._esxStocks.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final stock = entry.value;
+              final rowTicker = stock['ticker'] as String;
+              final rowCompany = stock['company'] as String;
+              final rowPrice = (stock['price'] as num).toDouble();
+              final rowChange = (stock['changePct'] as num).toDouble();
+              final rowIsPos = rowChange >= 0;
+              final rowSeries = (stock['series'] as Map<String, List<double>>)['1D']!;
+              final isSelected = rowTicker == _selectedEsxTicker;
+
+              return Column(
+                children: [
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => setState(() => _selectedEsxTicker = rowTicker),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                      decoration: BoxDecoration(
+                        color: isSelected ? PazColors.emeraldMuted : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  rowTicker,
+                                  style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: PazColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  rowCompany,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: PazColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 72,
+                            height: 28,
+                            child: CustomPaint(
+                              painter: _MiniSparklinePainter(
+                                points: rowSeries,
+                                color: rowIsPos ? PazColors.emerald : PazColors.red,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${rowPrice.toStringAsFixed(2)} ETB',
+                                style: PazTheme.monoNumber(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: PazColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: rowIsPos ? PazColors.emerald : PazColors.red,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  '${rowIsPos ? '+' : ''}${rowChange.toStringAsFixed(2)}%',
+                                  style: PazTheme.monoNumber(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: rowIsPos ? const Color(0xFF06281C) : Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (idx < _esxStocks.length - 1) const Divider(height: 6),
+                ],
+              );
+            }),
           ],
         ),
       ),
       const SizedBox(height: 14),
+
+      // Email Notify Card
       Container(
         padding: const EdgeInsets.all(16),
         decoration: PazTheme.cardDecoration(),
@@ -770,11 +1096,11 @@ class _ToolsScreenState extends State<ToolsScreen> {
           children: [
             Row(
               children: [
-                const Icon(LucideIcons.mail, size: 16, color: PazColors.gold),
+                const Icon(LucideIcons.mail, size: 16, color: PazColors.emerald),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'JOIN INSTITUTIONAL EARLY ACCESS LIST',
+                    'GET NOTIFIED WHEN LIVE TRADING OPENS',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
@@ -789,7 +1115,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Receive beta invitations for ESX live order book streaming, trade notifications, and corporate prospectus filings.',
+              'Enter your email to be notified when live ESX stock prices and price alerts launch.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 color: PazColors.textMuted,
@@ -811,7 +1137,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'You are on the PAZ ESX Access List! We will notify you when trading order books go live.',
+                        'You are on the list! We will email you when live ESX stock prices launch.',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -852,7 +1178,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
               keyboardType: TextInputType.emailAddress,
               style: GoogleFonts.plusJakartaSans(fontSize: 13, color: PazColors.textPrimary),
               decoration: const InputDecoration(
-                hintText: 'Enter your institutional or personal email...',
+                hintText: 'you@example.com',
                 prefixIcon: Icon(LucideIcons.mail, size: 16, color: PazColors.textDim),
               ),
             ),
@@ -870,7 +1196,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                       )
                     : const Icon(LucideIcons.send, size: 16),
                 label: Text(
-                  'JOIN ACCESS LIST',
+                  'NOTIFY ME',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -884,59 +1210,138 @@ class _ToolsScreenState extends State<ToolsScreen> {
       ),
     ];
   }
+}
 
-  Widget _buildEsxSegmentRow({
-    required String title,
-    required String subtitle,
-    required String status,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: PazColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  color: PazColors.textDim,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
-            color: PazColors.cardElevated,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: PazColors.cardBorderStrong),
-          ),
-          child: Text(
-            status,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: PazColors.emerald,
-            ),
-          ),
-        ),
-      ],
-    );
+class _EsxLineChartPainter extends CustomPainter {
+  final List<double> points;
+  final Color color;
+
+  _EsxLineChartPainter({required this.points, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final minVal = points.reduce((a, b) => a < b ? a : b);
+    final maxVal = points.reduce((a, b) => a > b ? a : b);
+    final span = (maxVal - minVal) == 0 ? 1.0 : (maxVal - minVal);
+
+    // Faint horizontal gridlines
+    final gridPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..strokeWidth = 1;
+    for (final frac in [0.0, 0.5, 1.0]) {
+      final y = size.height * frac;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    final linePath = Path();
+    final fillPath = Path();
+    Offset? lastOffset;
+
+    for (var i = 0; i < points.length; i++) {
+      final x = (i / (points.length - 1)) * size.width;
+      final y = size.height - ((points[i] - minVal) / span) * size.height;
+      final offset = Offset(x, y);
+      if (i == 0) {
+        linePath.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
+      } else {
+        linePath.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+      lastOffset = offset;
+    }
+
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          color.withValues(alpha: 0.28),
+          color.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawPath(fillPath, fillPaint);
+
+    final linePaint = Paint()
+      ..color = color
+      ..strokeWidth = 2.2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(linePath, linePaint);
+
+    if (lastOffset != null) {
+      canvas.drawCircle(lastOffset, 4.0, Paint()..color = color);
+      canvas.drawCircle(
+        lastOffset,
+        4.0,
+        Paint()
+          ..color = PazColors.canvas
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _EsxLineChartPainter oldDelegate) {
+    return oldDelegate.points != points || oldDelegate.color != color;
+  }
+}
+
+class _MiniSparklinePainter extends CustomPainter {
+  final List<double> points;
+  final Color color;
+
+  _MiniSparklinePainter({required this.points, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final minVal = points.reduce((a, b) => a < b ? a : b);
+    final maxVal = points.reduce((a, b) => a > b ? a : b);
+    final span = (maxVal - minVal) == 0 ? 1.0 : (maxVal - minVal);
+
+    // Faint dotted baseline at starting value
+    final baselineY = size.height - ((points.first - minVal) / span) * size.height;
+    final dotPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
+      ..strokeWidth = 1;
+    for (double x = 0; x < size.width; x += 5) {
+      canvas.drawLine(
+        Offset(x, baselineY),
+        Offset((x + 2.5).clamp(0, size.width), baselineY),
+        dotPaint,
+      );
+    }
+
+    final path = Path();
+    for (var i = 0; i < points.length; i++) {
+      final x = (i / (points.length - 1)) * size.width;
+      final y = size.height - ((points[i] - minVal) / span) * size.height;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    final linePaint = Paint()
+      ..color = color
+      ..strokeWidth = 1.75
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _MiniSparklinePainter oldDelegate) {
+    return oldDelegate.points != points || oldDelegate.color != color;
   }
 }

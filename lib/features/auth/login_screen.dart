@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Institutional Foreign Exchange & Macro Intelligence',
+                    'Live Ethiopian Exchange Rates, Gold & Market Intelligence',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Email Input
                   Text(
-                    'INSTITUTIONAL EMAIL',
+                    'EMAIL',
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -202,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontSize: 14,
                     ),
                     decoration: const InputDecoration(
-                      hintText: 'name@institution.com',
+                      hintText: 'you@example.com',
                       prefixIcon: Icon(LucideIcons.mail, color: PazColors.textDim, size: 18),
                     ),
                     validator: (v) {

@@ -24,11 +24,11 @@ void main() {
 
     expect(find.text('PAZ TERMINAL'), findsOneWidget);
     expect(find.text('Overview'), findsOneWidget);
-    expect(find.text('Bank FX'), findsOneWidget);
-    expect(find.text('Gold 24K'), findsOneWidget);
+    expect(find.text('Bank Rates'), findsOneWidget);
+    expect(find.text('Gold Prices'), findsOneWidget);
   });
 
-  testWidgets('ToolsScreen renders remittance and ESX tools', (WidgetTester tester) async {
+  testWidgets('ToolsScreen renders remittance and Apple Stocks ESX preview', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(500 * 3, 900 * 3);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(() {
@@ -44,8 +44,18 @@ void main() {
     );
 
     expect(find.text('Remittance'), findsOneWidget);
-    expect(find.text('ESX / Equities'), findsOneWidget);
+    expect(find.text('Stocks (Soon)'), findsOneWidget);
     expect(find.text('DIASPORA REMITTANCE OPTIMIZER'), findsOneWidget);
+
+    // Switch to Stocks (Soon) tab and verify Apple Stocks-style preview rows
+    await tester.tap(find.text('Stocks (Soon)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('TELE'), findsWidgets);
+    expect(find.text('WGBX'), findsOneWidget);
+    expect(find.text('AWAB'), findsOneWidget);
+    expect(find.text('BOAX'), findsOneWidget);
+    expect(find.text('GDAB'), findsOneWidget);
   });
 
   testWidgets('PortfolioScreen renders in guest/authenticated mode', (WidgetTester tester) async {
@@ -83,5 +93,29 @@ void main() {
 
     expect(find.text('ABOUT PAZ TERMINAL'), findsOneWidget);
     expect(find.text('DATA SOVEREIGNTY & SOURCES'), findsOneWidget);
+  });
+
+  testWidgets('HowToUseScreen renders all 4 guide sections', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(500 * 3, 900 * 3);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: PazTheme.darkTheme,
+        home: const HowToUseScreen(),
+      ),
+    );
+
+    expect(find.text('HOW TO USE PAZ'), findsOneWidget);
+    expect(find.text('Compare Bank Exchange Rates'), findsOneWidget);
+    expect(find.text('Track Gold Prices & Market News'), findsOneWidget);
+    expect(find.text('Ask PAZ AI Anything'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    expect(find.text('Free Account vs. Guest Mode'), findsOneWidget);
   });
 }

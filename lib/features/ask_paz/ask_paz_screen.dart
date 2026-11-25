@@ -335,7 +335,7 @@ class _AskPazScreenState extends State<AskPazScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Institutional Macro Analysis On Demand',
+                  'Ethiopian Exchange Rates, Gold & Money Assistant',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,

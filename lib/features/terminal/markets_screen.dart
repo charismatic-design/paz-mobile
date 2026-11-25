@@ -18,7 +18,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   final TextEditingController _goldGramsController = TextEditingController(text: '10');
   final NumberFormat _currencyFormat = NumberFormat('#,##0.00');
 
-  int _selectedSubTab = 0; // 0: Overview, 1: Bank FX, 2: Gold 24K, 3: Macro & News
+  int _selectedSubTab = 0; // 0: Overview, 1: Bank Rates, 2: Gold Prices, 3: Market News
   String _selectedBankCurrency = 'USD';
 
   bool _isLoading = true;
@@ -30,7 +30,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
   Map<String, dynamic>? _macroData;
   Map<String, dynamic>? _newsData;
 
-  final List<String> _subTabs = ['Overview', 'Bank FX', 'Gold 24K', 'Macro & News'];
+  final List<String> _subTabs = ['Overview', 'Bank Rates', 'Gold Prices', 'Market News'];
   final List<String> _bankCurrencies = ['USD', 'EUR', 'GBP', 'AED'];
 
   @override
@@ -467,7 +467,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 value: '${_currencyFormat.format(gold24k)} ETB',
                 change: 'XAU Spot Parity',
                 changePositive: true,
-                badge: 'BULLION',
+                badge: '24K GOLD',
               ),
             ),
             const SizedBox(width: 10),
@@ -1032,7 +1032,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'COMMERCIAL BANKS FX SPREAD MATRIX',
+                    'BANK EXCHANGE RATES',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
@@ -1243,7 +1243,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'SPREAD',
+                    'BUY / SELL GAP',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
@@ -1303,7 +1303,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'PHYSICAL GOLD BULLION & RESERVES',
+                    'GOLD PRICES',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
@@ -1326,7 +1326,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Ethiopia domestic bullion valuation anchored by international XAU spot price and National Bank interbank market rate.',
+              'Today\x27s local gold prices in ETB, based on global gold rates and the USD/ETB exchange rate.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 color: PazColors.textMuted,
@@ -1510,7 +1510,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
               ),
               const Divider(height: 16),
               _buildNewsItem(
-                title: 'ESX Equities Platform Concludes Institutional Mock Trading Round',
+                title: 'Ethiopian Stock Market (ESX) Prepares for Public Launch',
                 source: 'Capital Ethiopia',
                 time: '6h ago',
               ),
@@ -1591,7 +1591,7 @@ class _MarketsScreenState extends State<MarketsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'PAZ INSTITUTIONAL TERMINAL • v2.4.0',
+            'PAZ TERMINAL • v2.4.0',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 9,
               fontWeight: FontWeight.w500,

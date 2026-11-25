@@ -203,7 +203,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 6),
               Text(
                 _step == 1
-                    ? 'Enter your registered institutional email to receive a 6-digit reset code.'
+                    ? 'Enter your registered email to receive a 6-digit reset code.'
                     : 'Enter the 6-digit code sent to ${_emailController.text.trim()} and choose a new password.',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
@@ -276,7 +276,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'INSTITUTIONAL EMAIL',
+                        'EMAIL',
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -293,7 +293,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           fontSize: 14,
                         ),
                         decoration: const InputDecoration(
-                          hintText: 'name@institution.com',
+                          hintText: 'you@example.com',
                           prefixIcon: Icon(LucideIcons.mail, color: PazColors.textDim, size: 18),
                         ),
                         validator: (v) {

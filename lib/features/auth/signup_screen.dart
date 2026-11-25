@@ -92,7 +92,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Create Institutional Account',
+          'Create Free Account',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -110,7 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Institutional Registration',
+                    'Create Free Account',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -120,7 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Access live interbank spreads, bullion analytics, and AI portfolio telemetry.',
+                    'Track live bank exchange rates, gold prices, and Ask PAZ AI in one place.',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       color: PazColors.textMuted,
@@ -188,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   // Email
                   Text(
-                    'INSTITUTIONAL EMAIL',
+                    'EMAIL',
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -205,7 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       fontSize: 14,
                     ),
                     decoration: const InputDecoration(
-                      hintText: 'name@institution.com',
+                      hintText: 'you@example.com',
                       prefixIcon: Icon(LucideIcons.mail, color: PazColors.textDim, size: 18),
                     ),
                     validator: (v) {
